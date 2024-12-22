@@ -63,11 +63,9 @@ tools = [
     }
 ]
 
-# functions_list = {
-#     "get_flight_info": functools.partial()
-# }
 
-messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne?"}]
+messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne and mumbai to chennai?"}] # for mulitple queries
+# messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne?"}] #for single query
 
 response = client.chat.complete(
     model=model,
@@ -78,23 +76,27 @@ response = client.chat.complete(
 
 messages.append(response.choices[0].message)
 
+tool_calls = response.choices[0].message.tool_calls
+
+for tool_call in tool_calls:
+    function_name = tool_call.function.name
+    function_params = json.loads(tool_call.function.arguments)
+    user_function_names = {
+        "get_flight_info": functools.partial(get_flight_info)
+    }
+    user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
+    messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
 # print(response.choices[0].message.tool_calls[0].function.arguments)
 # tool_response = response.choices[0].message.tool_calls[0].function.arguments
-tool_call = response.choices[0].message.tool_calls[0]
-function_name = tool_call.function.name
-function_params = json.loads(tool_call.function.arguments)
-# function_params = json.loads(tool_response)
-# print(function_name,function_params['origin'])
+# tool_call = response.choices[0].message.tool_calls[0]
+# function_name = tool_call.function.name
+# function_params = json.loads(tool_call.function.arguments)
+# user_function_names = {
+#     "get_flight_info": functools.partial(get_flight_info)
+# }
 
-user_function_names = {
-    "get_flight_info": functools.partial(get_flight_info)
-}
-
-user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
-
-# print(user_function_calling_results)
-
-messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
+# user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
+# messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
 
 # print("this is messages", messages)
 second_response = client.chat.complete(model=model, messages=messages)
