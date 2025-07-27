@@ -22,7 +22,7 @@ data = {
 df = pd.DataFrame(data)
 
 api_key = os.environ["MISTRAL_API_KEY"]
-model = "mistral-large-latest"
+model = "mistral-small-latest"
 
 client = Mistral(api_key=api_key)
 
@@ -64,8 +64,8 @@ tools = [
 ]
 
 
-messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne and mumbai to chennai?"}] # for mulitple queries
-# messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne?"}] #for single query
+# messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne and mumbai to chennai?"}] # for mulitple queries
+messages = [{"role": "user", "content": "when is the next flight from sydney to melbourne?"}] #for single query
 
 response = client.chat.complete(
     model=model,
@@ -74,29 +74,31 @@ response = client.chat.complete(
     tool_choice="any"
 )
 
+print(response)
+
 messages.append(response.choices[0].message)
 
 tool_calls = response.choices[0].message.tool_calls
 
-for tool_call in tool_calls:
-    function_name = tool_call.function.name
-    function_params = json.loads(tool_call.function.arguments)
-    user_function_names = {
-        "get_flight_info": functools.partial(get_flight_info)
-    }
-    user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
-    messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
-# print(response.choices[0].message.tool_calls[0].function.arguments)
-# tool_response = response.choices[0].message.tool_calls[0].function.arguments
-# tool_call = response.choices[0].message.tool_calls[0]
-# function_name = tool_call.function.name
-# function_params = json.loads(tool_call.function.arguments)
-# user_function_names = {
-#     "get_flight_info": functools.partial(get_flight_info)
-# }
+# for tool_call in tool_calls:
+#     function_name = tool_call.function.name
+#     function_params = json.loads(tool_call.function.arguments)
+#     user_function_names = {
+#         "get_flight_info": functools.partial(get_flight_info)
+#     }
+#     user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
+#     messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
+print(response.choices[0].message.tool_calls[0].function.arguments)
+tool_response = response.choices[0].message.tool_calls[0].function.arguments
+tool_call = response.choices[0].message.tool_calls[0]
+function_name = tool_call.function.name
+function_params = json.loads(tool_call.function.arguments)
+user_function_names = {
+    "get_flight_info": functools.partial(get_flight_info)
+}
 
-# user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
-# messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
+user_function_calling_results = user_function_names[function_name](function_params['origin'], function_params['destination'])
+messages.append({"role":"tool", "name": function_name, "content":user_function_calling_results, "tool_call_id": tool_call.id})
 
 # print("this is messages", messages)
 second_response = client.chat.complete(model=model, messages=messages)

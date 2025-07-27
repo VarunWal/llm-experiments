@@ -14,7 +14,7 @@ requirements_planner = Agent(
     goal="Plan and prioritize the necessary documents for the project: {project_description}",
     backstory="You are responsible for breaking down the project description into clear, actionable requirements. Your work will provide the foundation for the BA document creation.",
     allow_delegation=False,
-    verbose=True
+    verbose=True,
 )
 
 # 1.2 Document Writer
@@ -23,7 +23,7 @@ document_writer = Agent(
     goal="Write comprehensive BA documents for the project: {project_description}",
     backstory="Using the requirements provided by the Requirements Planner, you create detailed documents such as the BRD, FRS, and use cases. Your work aligns with industry standards and the specific needs of the project.",
     allow_delegation=False,
-    verbose=True
+    verbose=True,
 )
 
 # 1.3 Quality Checker
@@ -32,7 +32,7 @@ quality_checker = Agent(
     goal="Review and validate the BA documents to ensure they meet quality and accuracy standards.",
     backstory="You are tasked with reviewing the generated documents to ensure clarity, completeness, and adherence to the project's objectives and requirements.",
     allow_delegation=False,
-    verbose=True
+    verbose=True,
 )
 
 # 2. Tasks
@@ -72,19 +72,23 @@ validate_documents = Task(
 crew = Crew(
     agents=[requirements_planner, document_writer, quality_checker],
     tasks=[plan_requirements, write_documents, validate_documents],
-    verbose=True
+    verbose=True,
 )
 
-results = crew.kickoff(inputs={"project_description": "Develop a CRM application for managing customer interactions and automating sales pipelines."})
+results = crew.kickoff(
+    inputs={
+        "project_description": "Develop a CRM application for managing customer interactions and automating sales pipelines."
+    }
+)
 
 print(type(results))
 # print(results)
 for result in results:
-    print('resulttt', result)
+    print("resulttt", result)
 
-#saving
-file_name = 'BA_Docs.md'
-with open(file_name, 'w') as file:
+# saving
+file_name = "BA_Docs.md"
+with open(file_name, "w") as file:
     file.write(str(results))
 print(f"Document saved as {file_name}")
 
@@ -96,4 +100,3 @@ print(f"Document saved as {file_name}")
 #         with open(file_name, "w") as file:
 #             file.write(content)
 #         print(f"Document saved as {file_name}")
-
